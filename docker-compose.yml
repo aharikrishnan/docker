@@ -1,0 +1,47 @@
+version: '2'
+services:
+  notebook:
+    image: x/notebook:base
+    container_name: x-notebook
+    hostname: red
+    depends_on:
+      - sshd
+    build:
+      context: ./jupyter-docker/
+      dockerfile: Dockerfile
+    environment:
+      SFTP: "true"
+      SSH_USERS: "root:1000:1000"
+    entrypoint: ["/sbin/tini", "--", "/entry.sh"]
+    command: ["/usr/local/bin/start.sh"]
+    volumes:
+      - ./docker-sshd/id_rsa.pub:/etc/authorized_keys/www
+      - ./jupyter-docker/notebook:/root/notebook
+      - ~/code/ml/dedupe-examples/:/root/dedupe-examples
+    ports:
+      - "2222:22"
+      - "8888:443"
+
+  sshd:
+    image: x/sshd:base
+    container_name: x-sshd
+    hostname: red
+    depends_on:
+      - linux
+    build:
+      context: ./docker-sshd
+      dockerfile: Dockerfile
+    environment:
+      DEBUG: "true"
+      SFTP: "true"
+      SSH_USERS: "www:1000:1000"
+    #entrypoint: ["/entry.sh"]
+    #command: ["/usr/sbin/sshd", "-D", "-f", "/etc/ssh/sshd_config"]
+    volumes:
+      - ./id_rsa.pub:/etc/authorized_keys/www
+
+  linux:
+    image: docker.io/alpine:3.6
+    container_name: linux
+
+

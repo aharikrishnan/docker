@@ -1,0 +1,4 @@
+docker rm `docker ps -a --format "{{.ID}}"| tac | xargs`
+docker rmi `docker images --format "{{.ID}}" | xargs`
+
+
